@@ -3,6 +3,9 @@
 ## Introduction
 This post is about how to use the `useMemo()` hook in React. This is the second part on the series titled [Memoization in React]().
 
+`useMemo()` is a function that returns a memoized value of a passed in resource intensive function. It is very useful in optimizing performance of a React component by eliminating repeating heavy computations.
+
+
 In this post, we dive into the details of the `useMemo()` hook with an extension of the example demonstrated in the previous post titled [Memoization in React](). The code is already available in [this GitHub repository](https://github.com/anewman15/react-memoization).
 
 As done in the previous article, we will make use of **_commenting out_** and **_uncommenting_** in order to make the changes to the code and utilize the browser's console to see the impact of the changes. I'm using Google Chrome and recommend it for all.
@@ -28,12 +31,7 @@ The discussion of this article is focused on optimizing performance by memoizing
 We're going to jump back to the `<Blog />` component for this example:
 
 ```JavaScript
-import React, { useEffect, useMemo, useState } from 'react';
-import fetchUpdatedPosts from '../fetch/fetchUpdatedPosts';
-import allPosts from './../data/allPosts.json';
-import sortPosts from '../utils/sortPosts';
-import LatestPost from './LatestPost';
-import UserPostsIndex from './UserPostsIndex';
+// imports
 
 const Blog = ({ signedIn }) => {
   const [updatedPosts, setUpdatedPosts] = useState(allPosts);
@@ -65,16 +63,9 @@ const Blog = ({ signedIn }) => {
       <h1 className="m-1 p-1 text-center heading-lg">Memoization in React</h1>
       <div className="m-1 p-2 ">
         <div className="my-1 p-2 box">
-          <div className="latest-posts-top">
-            <h3 className="heading-md my-1 p-1">Latest posts</h3>
-            <div className="p-1">
-              {localTime}
-            </div>
-          </div>
-          <div className="my-1">
-            <button className="btn btn-primary" onClick={getLatestPosts}>Get&nbsp;Latest&nbsp;Post</button>
-          </div>
-          <hr className="hr my-2" />
+
+          { /* More JSX code here... */ }
+
           <LatestPost signedIn={signedIn} post={sortedPosts[0]} />
         </div>
         <UserPostsIndex signedIn={signedIn}/>
@@ -87,7 +78,7 @@ const Blog = ({ signedIn }) => {
 export default React.memo(Blog);
 ```
 
-We'd like to focus particularly on the `sortPosts()` utility function which can get expensive if passed a long array of posts. At the moment, we are only sorting 101 items returned from `fetchUpdatedPosts()`, but in an actual application the number can be much higher and consume resources at cale. Thus it is an expensive function.
+We'd like to focus particularly on the `sortPosts()` utility function which can get expensive if passed a long array of posts. At the moment, we are only sorting 101 items returned from `fetchUpdatedPosts()`, but in an actual application the number can be much higher and consume resources at scale. Thus it is an expensive function.
 
 If we look inside the `useEffect()` hook, we are updating the locale time string and storing it in `localTime` for our clock. `localTime` updates every second and at each state change triggers a re-render of `<Blog />`. The clock does not represent a genuine UI feature for us here, but it is there to make a point about how frequent re-renders complicates things with expensive utility functions.
 
@@ -104,7 +95,7 @@ export default sortPosts;
 
 If we look at the console, we see that `Sorting posts...` is being looged at 1000ms intervals, i.e. with the tick of our clock:
 
-![use-memo-1](./article-images/use-memo-1.png)
+![use-memo-1](https://imgbox.com/bP3cyZw4)
 
 This shows `sortPosts()` is called at every re-render of `<Blog />`. An expensive function, invoked every second for no obvious reason is too much of an ask from the app. We don't want `sortPosts()` to be called if `updatedPosts` is not changed.
 
@@ -118,7 +109,7 @@ This shows `sortPosts()` is called at every re-render of `<Blog />`. An expensiv
 
 Checking our console, we can see that `Sorting posts...` has been logged only once, indicating only one invocation of `sortPosts()`:
 
-![use-memo-2](./article-images/use-memo-2.png)
+![use-memo-2](https://imgbox.com/naMMrxaR)
 
 This gives us a huge performance gain.
 
@@ -129,7 +120,7 @@ In the JSX, we have a `Get Latest Post` button, which is used to fetch latest po
 
 If we check our console while clicking the button, we can clearly see `Sorting posts...` being logged for each click:
 
-![use-mem0-3](./article-images/use-memo-3.png)
+![use-mem0-3](https://imgbox.com/bwQFj9Zv)
 
 It is important to notice that, if we remove the dependency from `useMemo()`, `sortPosts()` will not be invoked when `updatedPosts` change:
 
@@ -140,7 +131,7 @@ It is important to notice that, if we remove the dependency from `useMemo()`, `s
 
 There is no sorting going on when we need it:
 
-![use-memo-4](./article-images/use-memo-4.png)
+![use-memo-4]("https://imgbox.com/vW1o00kh")
 
 It is also important to know that `useMemo()` returns a value, as opposed to a function. This is what differentiates it from the `useCallback()` hook, which returns a memoized function. So, `useMemo()` is preferred for memoizing a value, rather than a callback function.
 
